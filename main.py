@@ -10,19 +10,10 @@ from nltk.stem import WordNetLemmatizer
 import nltk
 import time
 from textblob import TextBlob
-import subprocess
 
 llm = OllamaLLM(model="llama3.2:3b", temperature=0.6)
 lemmatizer = WordNetLemmatizer()
 nltk.download('wordnet')
-def download_ollama_model(model_name):
-    try:
-        print(f"Downloading model: {model_name}...")
-        # Use subprocess to call the Ollama CLI command to download the model
-        subprocess.run(["ollama", "pull", model_name], check=True)
-        print(f"Model {model_name} downloaded successfully.")
-    except subprocess.CalledProcessError as e:
-        print(f"Error downloading model: {e}")
 
 def create_vectordb_faiss():
     start_time = time.time()
@@ -123,7 +114,11 @@ def get_llm_recommendations(vectorstore, user_query):
 def main():
     st.title("AI Matchmaker Test")
     embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-mpnet-base-v2")
-
+    try:
+        vector_db = FAISS.load_local("all-mpnet-base-v2_faiss", embeddings, allow_dangerous_deserialization=True)
+    except Exception as e:
+        st.error(f"Error loading vector database: {e}")
+        return
     try:
         vector_db = FAISS.load_local("all-mpnet-base-v2_faiss", embeddings, allow_dangerous_deserialization=True)
     except Exception as e:
